@@ -5,6 +5,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id "org.flywaydb.flyway" version "7.3.0"
     id 'java'
+    id "com.gorylenko.gradle-git-properties" version "2.2.4"
 }
 
 repositories {
@@ -14,25 +15,29 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'mysql:mysql-connector-java'
-    implementation 'org.junit.jupiter:junit-jupiter:5.4.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 test {
     useJUnitPlatform()
 }
-    def developmentDbUrl = "jdbc:mysql://localhost:3306/tracker_dev?user=tracker&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false"
-    bootRun.environment([
-            "WELCOME_MESSAGE": "howdy",
-            "SPRING_DATASOURCE_URL": developmentDbUrl,
-    ])
-    def testDbUrl = "jdbc:mysql://localhost:3306/tracker_test?user=tracker&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false"
-    test.environment([
-            "WELCOME_MESSAGE": "Hello from test",
-            "SPRING_DATASOURCE_URL": testDbUrl,
-    ])
 
+def developmentDbUrl = "jdbc:mysql://localhost:3306/tracker_dev?user=tracker&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false"
+bootRun.environment([
+        "WELCOME_MESSAGE": "howdy",
+        "SPRING_DATASOURCE_URL": developmentDbUrl,
+        "MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE": "*",
+        "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS": "always",
+        "MANAGEMENT_HEALTH_PROBES_ENABLED": true
+])
+
+def testDbUrl = "jdbc:mysql://localhost:3306/tracker_test?user=tracker&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false"
+test.environment([
+        "WELCOME_MESSAGE": "Hello from test",
+        "SPRING_DATASOURCE_URL": testDbUrl
+])
 
 flyway {
     url = developmentDbUrl
@@ -43,4 +48,8 @@ flyway {
 
 task testMigrate(type: FlywayMigrateTask) {
     url = testDbUrl
+}
+
+springBoot {
+    buildInfo()
 }
